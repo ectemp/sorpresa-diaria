@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu Sorpresa Diaria</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #FAF9F6;      
+            --lila-main: #C8B6FF;     
+            --white: #FFFFFF;         
+            --text-color: #2B2B2B;    
+            --btn-color: #7B61FF;     
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* =========================================
+           PANTALLA DE BIENVENIDA
+           ========================================= */
+        .welcome-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            transition: opacity 0.5s ease, visibility 0.5s;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .welcome-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .welcome-title {
+            font-size: 2.2rem;
+            color: var(--btn-color);
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .welcome-text {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .welcome-text span {
+            color: var(--btn-color);
+            font-weight: 700;
+        }
+
+        .continue-btn {
+            background-color: var(--btn-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 35px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(123, 97, 255, 0.4);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .continue-btn:active { transform: scale(0.95); }
+
+        /* =========================================
+           INTERFAZ PRINCIPAL (RULETA)
+           ========================================= */
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            z-index: 10;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        p.subtitle {
+            font-size: 0.95rem;
+            color: #666;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        .roulette-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -15px;
+            z-index: 20;
+            width: 0; 
+            height: 0; 
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid var(--text-color);
+        }
+
+        .wheel-wrapper {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transition: transform 4s cubic-bezier(0.25, 1, 0.25, 1);
+            border: 4px solid var(--white);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .spin-btn {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-color: var(--btn-color);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            z-index: 15;
+            box-shadow: 0 4px 10px rgba(123, 97, 255, 0.4);
+            transition: transform 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spin-btn:active { transform: scale(0.95); }
+        .spin-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* =========================================
+           MODAL DEL PREMIO (POP-UP)
+           ========================================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(43, 43, 43, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            padding: 2rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-top: 8px solid var(--lila-main);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+
+        .modal-content h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--btn-color);
+        }
+
+        .modal-content p {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background-color: var(--lila-main);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="welcome-screen" id="welcome-screen">
+        <h1 class="welcome-title">Tu Dosis Diaria de Suerte</h1>
+        <p class="welcome-text">Promoción válida por <span id="days-left">0</span> días.</p>
+        <button class="continue-btn" id="continue-btn">Continuar</button>
+    </div>
+
+    <header>
+        <h1>Tu Sorpresa Diaria</h1>
+        <p class="subtitle" id="status-text">Haz una captura de tu premio y reclámalo cuando quieras</p>
+    </header>
+
+    <div class="roulette-container">
+        <div class="pointer"></div>
+        <div class="wheel-wrapper" id="wheel-wrapper">
+            <canvas id="wheel-canvas" width="500" height="500"></canvas>
+        </div>
+        <button class="spin-btn" id="spin-btn">GIRAR</button>
+    </div>
+
+        <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">¡Premio!</h2>
+            <p id="modal-desc">Descripción</p>
+            <button class="close-btn" id="close-btn">Aceptar</button>
+        </div>
+    </div>
+
+    <script>
+        // =========================================
+        // LÓGICA DE DÍAS Y PANTALLA DE INICIO
+        // =========================================
+        const calculateDaysLeft = () => {
+            const today = new Date();
+            // Año actual, Mes 6 (Julio), Día 11
+            const targetDate = new Date(today.getFullYear(), 6, 11); 
+            
+            const diffTime = targetDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            return diffDays > 0 ? diffDays : 0;
+        };
+
+        document.getElementById('days-left').innerText = calculateDaysLeft();
+
+        document.getElementById('continue-btn').addEventListener('click', () => {
+            initAudio(); // Inicializa el motor de audio de forma segura
+            document.getElementById('welcome-screen').classList.add('hidden');
+        });
+
+        // =========================================
+        // ARREGLO MAESTRO DE PREMIOS (16)
+        // =========================================
+        const prizes = [
+            { short: "Delivery", desc: "Delivery sorpresa. Mándame esto cuando quieras cobrar tu antojo y me dices a dónde te lo mando." },
+            { short: "Duelo Celu", desc: "Duelo en el celu. Mándame esta captura cuando estés aburrida en la semana y quieras que descarguemos algún juego rápido para competir un rato (tipo Preguntados o lo que quieras)." },
+            { short: "Sin Filtro", desc: "Pregunta sin filtro. Guárdate este premio y úsalo cuando quieras hacerme una pregunta sobre cualquier tema. Respondo con la verdad." },
+            { short: "Insomnio", desc: "Pase de insomnio. Guarda esta captura para cuando no puedas dormir o te estreses. Tienes permiso de llamarme a la hora que quieras y contestaré con buena actitud." },
+            { short: "Playlist", desc: "Mini-playlist. Reclámame este premio por chat para que te arme y te mande un link con 3 canciones." },
+            { short: "Cita Virtual", desc: "Cita virtual. Mándame esto para cuando quieras que juguemos algo, escuchemos música en discord o lo que quieras mientras conversamos." },
+            { short: "Spoiler", desc: "Spoiler. Reclama tu pista sobre lo que estoy planeando para después. Escríbeme y te paso el dato." }, 
+            { short: "Captura", desc: "Captura inmediata. Úsalo cuando quieras: pídeme por chat una captura de mi celular, de lo que sea que esté haciendo." },
+            { short: "Galería", desc: "Ruleta de galería. Mándame captura de esto junto con un número al azar. Te mostraré la foto que esté exactamente en esa posición." },
+            { short: "Polígrafo", desc: "El polígrafo. Mándame este mensaje y dime qué crees que pensé la primera vez que nos vimos. Te confirmaré qué pasaba realmente por mi cabeza." },
+            { short: "Obediencia", desc: "Tus deseos son órdenes. Mándame esta captura para activar mi modo obediencia por un día completo. Úsalo sabiamente (por favor jsjs)" },
+            { short: "Vestimenta", desc: "Código de vestimenta. Para nuestra próxima cita, escríbeme y dime cómo me tengo que vestir." },
+            { short: "Beso", desc: "Beso random. Muéstrame esta captura en nuestra próxima salida, en el momento más random que elijas, para cobrarlo." },
+            { short: "Historia", desc: "La historia jamás contada. Guárdalo para nuestra próxima cita, elige un tema (ej. mi peor vergüenza) y te contaré una anécdota que no te sepas." },
+            { short: "Verdad", desc: "Verdad sin defensa. Guárdate el vale para cuando nos veamos. Mírame a los ojos, hazme una pregunta directa y la respondo sin evadirla." },
+            { short: "Helado", desc: "Salida por un helado. Mándame esta captura el día que tengas ganas de un helado." }
+        ];
+
+        let wonPrizes = JSON.parse(localStorage.getItem('wonPrizes')) || [];
+
+        if (wonPrizes.length >= 15) {
+            wonPrizes = [];
+            localStorage.setItem('wonPrizes', JSON.stringify(wonPrizes));
+        }
+
+        const canvas = document.getElementById("wheel-canvas");
+        const ctx = canvas.getContext("2d");
+        const numSlices = prizes.length;
+        const sliceAngle = (2 * Math.PI) / numSlices;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = canvas.width / 2;
+
+        const color1 = "#C8B6FF"; 
+        const color2 = "#FFFFFF"; 
+
+        function drawWheel() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < numSlices; i++) {
+                const startAngle = i * sliceAngle;
+                const endAngle = startAngle + sliceAngle;
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = i % 2 === 0 ? color1 : color2;
+                ctx.fill();
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                
+                ctx.fillStyle = wonPrizes.includes(i) ? "#999999" : "#2B2B2B"; 
+                
+                ctx.font = "bold 18px Poppins";
+                ctx.fillText(prizes[i].short, radius - 20, 6);
+                ctx.restore();
+            }
+        }
+        drawWheel();
+
+        // =========================================
+        // AUDIO API Y LÓGICA DE GIRO
+        // =========================================
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playTick() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05); 
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05); 
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function playWinSound() {
+            if (!audioCtx) return;
+            const freqs = [523.25, 659.25, 783.99, 1046.50]; 
+            freqs.forEach((freq, i) => {
+                setTimeout(() => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 1);
+                }, i * 80);
+            });
+        }
+
+        const wheelWrapper = document.getElementById("wheel-wrapper");
+        const spinBtn = document.getElementById("spin-btn");
+        const statusText = document.getElementById("status-text");
+        
+        let currentRotation = 0;
+        let isSpinning = false;
+        let tickInterval;
+
+        const todayStr = new Date().toLocaleDateString('es-EC');
+        const lastSpin = localStorage.getItem('lastSpinDate');
+
+        if (lastSpin === todayStr) {
+            spinBtn.disabled = true;
+            statusText.innerText = "¡Vuelve mañana por otro giro!";
+        }
+
+        spinBtn.addEventListener("click", () => {
+            if (isSpinning) return;
+            initAudio(); 
+            
+            isSpinning = true;
+            spinBtn.disabled = true;
+            statusText.innerText = "¡Girando...";
+
+            let ticksCount = 0;
+            tickInterval = setInterval(() => {
+                playTick();
+                ticksCount++;
+                if (ticksCount > 35) clearInterval(tickInterval); 
+            }, 100);
+
+            const now = new Date();
+            const isJuly11 = (now.getMonth() === 6 && now.getDate() === 11);
+
+            let winningIndex;
+            
+            if (isJuly11) {
+                winningIndex = 6; 
+            } else {
+                do {
+                    winningIndex = Math.floor(Math.random() * numSlices);
+                } while (wonPrizes.includes(winningIndex) || prizes[winningIndex].short === "Spoiler");
+            }
+
+            const sliceDegrees = 360 / numSlices;
+            const offset = 270; 
+            const targetAngle = (winningIndex * sliceDegrees) + (sliceDegrees / 2);
+            const spins = 360 * 5; 
+            const finalDegree = spins + (360 - targetAngle + offset);
+
+            currentRotation += finalDegree;
+            wheelWrapper.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                clearInterval(tickInterval);
+                playWinSound();
+                
+                showModal(prizes[winningIndex].short, prizes[winningIndex].desc);
+                
+                localStorage.setItem('lastSpinDate', todayStr);
+                statusText.innerText = "¡Vuelve mañana por otro giro!";
+                
+                if (!wonPrizes.includes(winningIndex)) {
+                    wonPrizes.push(winningIndex);
+                    localStorage.setItem('wonPrizes', JSON.stringify(wonPrizes));
+                }
+                
+            }, 4000);
+        });
+
+        // =========================================
+        // MODAL Y MODO PRUEBA
+        // =========================================
+        const modal = document.getElementById("modal");
+        const modalTitle = document.getElementById("modal-title");
+        const modalDesc = document.getElementById("modal-desc");
+        const closeBtn = document.getElementById("close-btn");
+
+        function showModal(title, desc) {
+            modalTitle.innerText = title;
+            modalDesc.innerText = desc;
+            modal.classList.add("active");
+        }
+
+        closeBtn.addEventListener("click", () => {
+            modal.classList.remove("active");
+            drawWheel(); 
+        });
+
+        function resetApp() {
+            localStorage.removeItem('wonPrizes');
+            localStorage.removeItem('lastSpinDate');
+            location.reload();
+        }
+    </script>
+</body>
+</html>
