@@ -309,8 +309,15 @@
 
         let wonPrizes = JSON.parse(localStorage.getItem('wonPrizes')) || [];
 
+        // BLOQUEO DE HELADO: Aseguramos que el índice 15 siempre esté en la lista de "ganados" desde el inicio
+        if (!wonPrizes.includes(15)) {
+            wonPrizes.push(15);
+            localStorage.setItem('wonPrizes', JSON.stringify(wonPrizes));
+        }
+
+        // REINICIO SEGURO: Si ya salieron todos los premios, reiniciamos la memoria dejando el helado bloqueado
         if (wonPrizes.length >= 15) {
-            wonPrizes = [];
+            wonPrizes = [15];
             localStorage.setItem('wonPrizes', JSON.stringify(wonPrizes));
         }
 
