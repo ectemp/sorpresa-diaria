@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tu Sorpresa Diaria</title>
-    <!-- Fuente Poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -34,9 +33,7 @@
             position: relative;
         }
 
-        /* =========================================
-           PANTALLA DE BIENVENIDA
-           ========================================= */
+        /* PANTALLA DE BIENVENIDA */
         .welcome-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -90,9 +87,7 @@
 
         .continue-btn:active { transform: scale(0.95); }
 
-        /* =========================================
-           INTERFAZ PRINCIPAL (RULETA)
-           ========================================= */
+        /* RULETA */
         header {
             text-align: center;
             margin-bottom: 2rem;
@@ -174,9 +169,7 @@
             box-shadow: none;
         }
 
-        /* =========================================
-           MODAL DEL PREMIO (POP-UP)
-           ========================================= */
+        /* MODAL */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -233,18 +226,28 @@
             cursor: pointer;
         }
 
+        .dev-btn {
+            position: absolute;
+            bottom: 20px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            z-index: 50;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Pantalla de Bienvenida -->
     <div class="welcome-screen" id="welcome-screen">
         <h1 class="welcome-title">Tu Dosis Diaria de Suerte</h1>
         <p class="welcome-text">Promoción válida por <span id="days-left">0</span> días.</p>
         <button class="continue-btn" id="continue-btn">Continuar</button>
     </div>
 
-    <!-- Pantalla de la Ruleta -->
     <header>
         <h1>Tu Sorpresa Diaria</h1>
         <p class="subtitle" id="status-text">Haz una captura de tu premio y reclámalo cuando quieras</p>
@@ -258,6 +261,9 @@
         <button class="spin-btn" id="spin-btn">GIRAR</button>
     </div>
 
+    <!-- BORRA ESTE BOTÓN AL FINALIZAR TUS PRUEBAS -->
+    <button class="dev-btn" onclick="resetApp()">Resetear Ruleta (Modo Prueba)</button>
+
     <div class="modal-overlay" id="modal">
         <div class="modal-content">
             <h2 id="modal-title">¡Premio!</h2>
@@ -267,12 +273,10 @@
     </div>
 
     <script>
-        // =========================================
-        // LÓGICA DE DÍAS Y PANTALLA DE INICIO
-        // =========================================
+        // 1. CÁLCULO DE FECHAS (Hasta el 4 de Julio)
         const calculateDaysLeft = () => {
             const today = new Date();
-            // Año actual, Mes 6 (Julio), Día 4 (NUEVA FECHA DE CIERRE)
+            // 6 = Julio, 4 = Día 4
             const targetDate = new Date(today.getFullYear(), 6, 4); 
             
             const diffTime = targetDate - today;
@@ -288,37 +292,35 @@
             document.getElementById('welcome-screen').classList.add('hidden');
         });
 
-        // =========================================
-        // ARREGLO MAESTRO DE PREMIOS (16)
-        // =========================================
+        // 2. INVENTARIO DE PREMIOS
         const prizes = [
             { short: "Delivery", desc: "Delivery sorpresa. Mándame esto cuando quieras cobrar tu antojo y me dices a dónde te lo mando." },
-            { short: "Duelo Celu", desc: "Duelo en el celu. Mándame esta captura cuando estés aburrida en la semana y quieras que descarguemos algún juego rápido para competir un rato (tipo Preguntados o lo que quieras)." },
+            { short: "Duelo Celu", desc: "Duelo en el celu. Mándame esta captura cuando estés aburrida en la semana y quieras que descarguemos algún juego rápido para competir un rato." },
             { short: "Sin Filtro", desc: "Pregunta sin filtro. Guárdate este premio y úsalo cuando quieras hacerme una pregunta sobre cualquier tema. Respondo con la verdad." },
-            { short: "Insomnio", desc: "Pase de insomnio. Guarda esta captura para cuando no puedas dormir o te estreses. Tienes permiso de llamarme a la hora que quieras y contestaré con buena actitud." },
+            { short: "Insomnio", desc: "Pase de insomnio. Guarda esta captura para cuando no puedas dormir o te estreses. Tienes permiso de llamarme a la hora que quieras." },
             { short: "Playlist", desc: "Mini-playlist. Reclámame este premio por chat para que te arme y te mande un link con 3 canciones." },
             { short: "Cita Virtual", desc: "Cita virtual. Mándame esto para cuando quieras que nos metamos un rato a Minecraft." },
             { short: "Spoiler", desc: "Spoiler. Reclama tu pista sobre lo que estoy planeando para después. Escríbeme y te paso el dato." }, // ÍNDICE 6
-            { short: "Captura", desc: "Captura inmediata. Úsalo cuando quieras: pídeme por chat una captura de mi celular, de lo que sea que esté haciendo." },
-            { short: "Galería", desc: "Ruleta de galería. Mándame captura de esto junto con un número al azar. Te mostraré la foto que esté exactamente en esa posición." },
-            { short: "Polígrafo", desc: "El polígrafo. Mándame este mensaje y dime qué crees que pensé la primera vez que nos vimos. Te confirmaré qué pasaba realmente por mi cabeza." },
-            { short: "Obediencia", desc: "Tus deseos son órdenes. Mándame esta captura para activar mi modo obediencia por un día completo. Úsalo sabiamente (por favor jsjs)" },
+            { short: "Captura", desc: "Captura inmediata. Úsalo cuando quieras: pídeme por chat una captura de mi celular." },
+            { short: "Galería", desc: "Ruleta de galería. Mándame captura de esto junto con un número al azar. Te mostraré la foto que esté en esa posición." },
+            { short: "Polígrafo", desc: "El polígrafo. Mándame este mensaje y dime qué crees que pensé la primera vez que nos vimos." },
+            { short: "Obediencia", desc: "Tus deseos son órdenes. Mándame esta captura para activar mi modo obediencia por un día completo." },
             { short: "Vestimenta", desc: "Código de vestimenta. Para nuestra próxima cita, escríbeme y dime cómo me tengo que vestir." },
-            { short: "Beso", desc: "Beso random. Muéstrame esta captura en nuestra próxima salida, en el momento más random que elijas, para cobrarlo." },
-            { short: "Historia", desc: "La historia jamás contada. Guárdalo para nuestra próxima cita, elige un tema (ej. mi peor vergüenza) y te contaré una anécdota que no te sepas." },
-            { short: "Verdad", desc: "Verdad sin defensa. Guárdate el vale para cuando nos veamos. Mírame a los ojos, hazme una pregunta directa y la respondo sin evadirla." },
+            { short: "Beso", desc: "Beso random. Muéstrame esta captura en nuestra próxima salida para cobrarlo." },
+            { short: "Historia", desc: "La historia jamás contada. Elige un tema (ej. mi peor vergüenza) y te contaré una anécdota." },
+            { short: "Verdad", desc: "Verdad sin defensa. Guárdate el vale para cuando nos veamos. Hazme una pregunta directa y la respondo." },
             { short: "Helado", desc: "Salida por un helado. Mándame esta captura el día que tengas ganas de un helado." } // ÍNDICE 15
         ];
 
         let wonPrizes = JSON.parse(localStorage.getItem('wonPrizes')) || [];
 
-        // NUEVO: Asegurar que el Helado (15) siempre esté bloqueado desde el inicio
+        // BLOQUEO DE HELADO: El índice 15 siempre estará en la lista de premios "ya ganados"
         if (!wonPrizes.includes(15)) {
             wonPrizes.push(15);
             localStorage.setItem('wonPrizes', JSON.stringify(wonPrizes));
         }
 
-        // Reinicio de premios si llega a jugar 15 veces, pero manteniendo el helado bloqueado
+        // REINICIO SEGURO: Si llega a 15, limpiamos pero dejamos el helado bloqueado
         if (wonPrizes.length >= 15) {
             wonPrizes = [15];
             localStorage.setItem('wonPrizes', JSON.stringify(wonPrizes));
@@ -353,7 +355,6 @@
                 ctx.rotate(startAngle + sliceAngle / 2);
                 ctx.textAlign = "right";
                 
-                // Los premios en la lista wonPrizes (incluyendo el Helado) se verán grises
                 ctx.fillStyle = wonPrizes.includes(i) ? "#999999" : "#2B2B2B"; 
                 
                 ctx.font = "bold 18px Poppins";
@@ -363,9 +364,7 @@
         }
         drawWheel();
 
-        // =========================================
-        // AUDIO API Y LÓGICA DE GIRO
-        // =========================================
+        // 3. AUDIO API SEGURO
         let audioCtx;
         function initAudio() {
             if (!audioCtx) {
@@ -398,4 +397,4 @@
                     const gain = audioCtx.createGain();
                     osc.type = 'sine';
                     osc.frequency.value = freq;
-                    gain.gain.setValueAtTime(0.1Normally I can help with things like this, but I don't seem to have access to that content. You can try again or ask me for something else.
+                    gain.gain.setValueAtTime(0.15, audioCtx.Normally I can help with things like this, but I don't seem to have access to that content. You can try again or ask me for something else.
